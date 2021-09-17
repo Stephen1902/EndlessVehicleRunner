@@ -4,9 +4,12 @@
 #include "EVRGameStateBase.h"
 #include "EVRSpawnArrowComponent.h"
 #include "EVRSpawnMaster.h"
+#include "Vehicles/EVRVehiclePlayer.h"
+#include "Vehicles/EVRVehicleMaster.h"
 #include "Components/ArrowComponent.h"
 #include "Components/BoxComponent.h"
-#include "Player/EVRPlayerVehicle.h"
+#include "EVRRoadsideSpawns.h"
+#include "Vehicles/EVRVehicleAI.h"
 
 // Sets default values
 AEVRLevelMaster::AEVRLevelMaster()
@@ -24,7 +27,7 @@ AEVRLevelMaster::AEVRLevelMaster()
 	StartCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("Start Collision"));
 	StartCollision->SetupAttachment(RootComponent);
 	StartCollision->SetRelativeLocation(FVector(0.f, 0.f, 120.f));
-	StartCollision->OnComponentBeginOverlap.AddDynamic(this, &AEVRLevelMaster::OnBeginOverlapStartComp);
+	//StartCollision->OnComponentBeginOverlap.AddDynamic(this, &AEVRLevelMaster::OnBeginOverlapStartComp);
 	
 	ArrowComp = CreateDefaultSubobject<UArrowComponent>(TEXT("Attach Point"));
 	ArrowComp->SetupAttachment(RootComponent);
@@ -34,10 +37,7 @@ AEVRLevelMaster::AEVRLevelMaster()
 	EndCollision->SetupAttachment(ArrowComp);
 	EndCollision->SetRelativeLocation(FVector(0.f, 0.f,120.f));
 	EndCollision->SetBoxExtent(FVector(16.f, 500.f, 100.f));
-	
 	EndCollision->OnComponentBeginOverlap.AddDynamic(this, &AEVRLevelMaster::OnBeginOverlapEndComp);
-
-	EndCollision->SetHiddenInGame(false);
 
 	SpawnPointLeft = CreateDefaultSubobject<UEVRSpawnArrowComponent>(TEXT("Spawn Point Left"));
 	SpawnPointLeft->SetupAttachment(RootComponent);
@@ -51,11 +51,15 @@ AEVRLevelMaster::AEVRLevelMaster()
 	SpawnPointRight->SetupAttachment(RootComponent);
 	SpawnPointRight->SetRelativeLocation(FVector(100.f, 333.f, 30.f));
 
-	NewSpawnedActor = CreateDefaultSubobject<UChildActorComponent>(TEXT("Spawned Actor"));
-	NewSpawnedActor->SetupAttachment(RootComponent);
+	OnRoadActor = CreateDefaultSubobject<UChildActorComponent>(TEXT("Spawned Pickup Actor"));
+	OnRoadActor->SetupAttachment(RootComponent);
+
+	NewRoadsideActor = CreateDefaultSubobject<UChildActorComponent>(TEXT("Spawned Roadside Actor"));
+	NewRoadsideActor->SetupAttachment(RootComponent);
 	
 	TurnSpawnChance = 0.f;
 	BlockSpawnChance = 50;
+	bLastPieceWasPark = false;
 }
 
 // Called when the game starts or when spawned
@@ -65,7 +69,7 @@ void AEVRLevelMaster::BeginPlay()
 
 	GetReferences();
 	SetArrowAndBoxTransforms();
-	//SpawnPickup();
+	SpawnRoadsidePiece();
 }
 
 void AEVRLevelMaster::OnBeginOverlapEndComp(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -81,32 +85,6 @@ void AEVRLevelMaster::OnBeginOverlapEndComp(UPrimitiveComponent* HitComp, AActor
 	}
 }
 
-void AEVRLevelMaster::OnBeginOverlapStartComp(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-//	AEVRSpawnMaster* SpawnedActorHit = Cast<AEVRSpawnMaster>(OtherActor);
-
-	
-	
-	if ((PlayerVehicleRef && OtherActor == PlayerVehicleRef && !bHasTurnedVehicle) )//|| SpawnedActorHit)
-	{
-		bHasTurnedVehicle = true;
-		
-		float CurrentPlayerYaw = PlayerVehicleRef->GetActorRotation().Yaw;
-
-		if (FloorType == EFloorType::FT_Left)
-		{
-			CurrentPlayerYaw -= 90.f;
-		}
-		else
-		{
-			CurrentPlayerYaw += 90.f;
-		}
-
-		const FRotator NewPlayerRotation = FRotator(0.f, CurrentPlayerYaw, 0.f);
-		PlayerVehicleRef->SetNewPositionAfterTurn(ArrowComp->GetComponentLocation(), NewPlayerRotation);
-	}	
-}
-
 void AEVRLevelMaster::GetSpawnPointInfo(FVector& NewSpawnLocation, FRotator& NewSpawnRotation) const
 {
 	NewSpawnLocation = ArrowComp->GetComponentLocation();
@@ -118,24 +96,26 @@ void AEVRLevelMaster::SetArrowAndBoxTransforms()
 	// Only spawn items that can be collided with on the straight pieces
 	if (SpawnPointLeft->GetCanSpawnHere())
 	{
-		SpawnPointArray.Add(SpawnPointLeft->GetRelativeTransform());
+		SpawnPointArray.Add(SpawnPointLeft->GetComponentTransform());
 	}
 	
 	if (SpawnPointCentre->GetCanSpawnHere())
 	{
-		SpawnPointArray.Add(SpawnPointCentre->GetRelativeTransform());
+		SpawnPointArray.Add(SpawnPointCentre->GetComponentTransform());
 	}
 
 	if (SpawnPointRight->GetCanSpawnHere())
 	{
-		SpawnPointArray.Add(SpawnPointRight->GetRelativeTransform());
+		SpawnPointArray.Add(SpawnPointRight->GetComponentTransform());
 	}
 
 	switch (FloorType)
 	{
 	case EFloorType::FT_Straight:
 	default:
-		StartCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);	
+		StartCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		StartCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
+		StartCollision->SetGenerateOverlapEvents(false);
 		break;
 	case EFloorType::FT_Left:
 		ArrowComp->SetRelativeLocation(FVector(500.f, -500.f, 0.f));
@@ -161,11 +141,45 @@ void AEVRLevelMaster::GetReferences()
 		GameStateRef->SetEVRLevelMasterRef(this);
 	}
 
-	PlayerVehicleRef = Cast<AEVRPlayerVehicle>(GetWorld()->GetFirstPlayerController()->GetPawn());
+	PlayerVehicleRef = Cast<AEVRVehiclePlayer>(GetWorld()->GetFirstPlayerController()->GetPawn());
 
 	if (!PlayerVehicleRef)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Player Vehicle Ref failed to set in EVRLevelMaster"));
+	}
+}
+
+void AEVRLevelMaster::SpawnRoadsidePiece()
+{
+	// Check for valid roadside pieces available for spawn
+	if (RoadsidePiecesToSpawn.Num() > 0)
+	{
+		int32 ItemToSpawn = FMath::RandRange(0, RoadsidePiecesToSpawn.Num() - 1);
+		
+		if (AEVRRoadsideSpawns* PieceToSpawn = Cast<AEVRRoadsideSpawns>(RoadsidePiecesToSpawn[ItemToSpawn].GetDefaultObject()))
+		{
+			// Check if last piece spawned was a park piece and if this one is, keep looping until it isn't
+			while (bLastPieceWasPark && PieceToSpawn->GetIsParkPiece())
+			{
+				ItemToSpawn = FMath::RandRange(0, RoadsidePiecesToSpawn.Num() - 1);
+				PieceToSpawn = Cast<AEVRRoadsideSpawns>(RoadsidePiecesToSpawn[ItemToSpawn].GetDefaultObject());
+			}
+
+			// Check if this new item is a park piece
+			if (PieceToSpawn->GetIsParkPiece())
+			{
+				bLastPieceWasPark = true;
+			}
+			else
+			{
+				bLastPieceWasPark = false;
+			}
+		
+			NewRoadsideActor->SetChildActorClass(RoadsidePiecesToSpawn[ItemToSpawn]);
+			NewRoadsideActor->SetRelativeLocation(FVector(500.f, 0.f, 0.f));
+			//NewRoadsideActor->CreateChildActor();
+		}
+			
 	}
 }
 
@@ -174,18 +188,68 @@ void AEVRLevelMaster::DestroyThisPiece()
 	Destroy();
 }
 
+
+void AEVRLevelMaster::AddVehicleToTurnedVehicleArray(AEVRVehicleMaster* VehicleIn)
+{
+	TurnedThisVehicle.Add(VehicleIn);
+}
+
 bool AEVRLevelMaster::SpawnPickup()
 {
 	// Check for valid spawn points and valid items in this level piece's array
-	if (SpawnPointArray.Num() > 0 && ItemsToSpawn.Num() > 0)
+	if (SpawnPointArray.Num() > 0 && NonPlayerVehicles.Num() > 0)
 	{
 		// Randomly generated the spawned item from the list of those available and a random location
-		const int32 ItemToSpawn = FMath::RandRange(0, ItemsToSpawn.Num() - 1);
-		const int32 LocationToSpawn = FMath::RandRange(0, SpawnPointArray.Num() - 1);
-	
-		NewSpawnedActor->SetChildActorClass(ItemsToSpawn[ItemToSpawn]);
-		NewSpawnedActor->SetRelativeTransform(SpawnPointArray[LocationToSpawn]);
-		NewSpawnedActor->CreateChildActor();
+		const int32 RandomVehicleToSpawn = FMath::RandRange(0, NonPlayerVehicles.Num() - 1);
+		const int32 RandomTransformToSpawnAt = FMath::RandRange(0,2);
+		
+		const FActorSpawnParameters SpawnInfo;
+		FVector WorldLocationToSpawn = ArrowComp->GetComponentLocation();
+		WorldLocationToSpawn.Z += 20.f;
+		
+		AEVRVehicleAI* NewVehicle = GetWorld()->SpawnActor<AEVRVehicleAI>(NonPlayerVehicles[RandomVehicleToSpawn], WorldLocationToSpawn, ArrowComp->GetComponentRotation(), SpawnInfo); 
+
+		// Check where the vehicle has spawned, adjusting the bHasTurned variable to ensure it turns correctly
+		const float ArrowRelativeYaw = ArrowComp->GetComponentRotation().Yaw;
+
+		// Check if the vehicle is moving along the "Y" axis, set as required for turning
+		if (FMath::IsNearlyEqual(ArrowRelativeYaw, 90.f, 1.f) || FMath::IsNearlyEqual(ArrowRelativeYaw, -90.f, 1.f))
+		{
+			NewVehicle->SetHasTurned(true);
+
+			NewVehicle->AddToLaneLocations(NewVehicle->GetActorLocation().X - NewVehicle->GetDistanceBetweenLanes());
+			NewVehicle->AddToLaneLocations(NewVehicle->GetActorLocation().X);
+			NewVehicle->AddToLaneLocations(NewVehicle->GetActorLocation().X + NewVehicle->GetDistanceBetweenLanes());
+		}
+		else
+		{
+			NewVehicle->SetHasTurned(false);
+			
+			NewVehicle->AddToLaneLocations(NewVehicle->GetActorLocation().Y - NewVehicle->GetDistanceBetweenLanes());
+			NewVehicle->AddToLaneLocations(NewVehicle->GetActorLocation().Y);
+			NewVehicle->AddToLaneLocations(NewVehicle->GetActorLocation().Y + NewVehicle->GetDistanceBetweenLanes());
+			
+		}
+		//OnRoadActor->SetChildActorClass(NonPlayerVehicles[ItemToSpawn]);
+		
+		if (SpawnPointArray.Num() == 3)
+		{
+			switch (RandomTransformToSpawnAt)
+			{
+				case 0:
+					NewVehicle->TurnLeft();
+					break;
+				case 1:
+				default:
+					break;
+				case 2:
+					NewVehicle->TurnRight();
+					break;
+			}
+		}
+
+		
+		//OnRoadActor->CreateChildActor();
 		return true;
 	}
 

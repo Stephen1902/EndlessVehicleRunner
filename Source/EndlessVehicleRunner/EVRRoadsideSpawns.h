@@ -21,7 +21,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Roadside Spawn")
 	UStaticMeshComponent* StaticMeshComp;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Roadside Spawn")
+/**	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Roadside Spawn")
 	class USpotLightComponent* RoadsideLight1;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Roadside Spawn")
@@ -32,17 +32,31 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Roadside Spawn")
 	class USpotLightComponent* RoadsideLight4;
+*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Roadside Spawn")
+	class UMaterialInterface* LightsOffMaterial;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Roadside Spawn")
+	class UMaterialInterface* LightsOnMaterial;
 
 	UFUNCTION(BlueprintCallable, Category = "Roadside Spawn")
 	bool GetIsParkPiece() const { return bIsParkPiece; }
+
+	// Starting value for the window material 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Roadside Spawn")
+	int32 StartWindowMat;
+
+	// End value for the window material 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Roadside Spawn")
+	int32 EndWindowMat;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintGetter="GetIsParkPiece", Category = "Roadside Spawn")
+	bool bIsParkPiece;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 private:
-	UPROPERTY(EditDefaultsOnly, BlueprintGetter="GetIsParkPiece", Category = "Roadside Spawn")
-	bool bIsParkPiece;
-	
-	
+	void LightUpWindows();
 };

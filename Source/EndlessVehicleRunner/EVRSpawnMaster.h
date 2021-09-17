@@ -55,7 +55,7 @@ public:
 
 private:
 	UPROPERTY()
-	class AEVRPlayerVehicle* PlayerVehicleRef;
+	class AEVRVehiclePlayer* PlayerVehicleRef;
 
 	UPROPERTY()
 	class AEVRGameStateBase* GameStateRef;

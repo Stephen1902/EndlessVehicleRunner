@@ -4,7 +4,7 @@
 #include "EVRSpawnMaster.h"
 #include "EVRGameStateBase.h"
 #include "Kismet/GameplayStatics.h"
-#include "Player/EVRPlayerVehicle.h"
+#include "Vehicles/EVRVehiclePlayer.h"
 
 // Sets default values
 AEVRSpawnMaster::AEVRSpawnMaster()
@@ -52,7 +52,7 @@ void AEVRSpawnMaster::Tick(float DeltaTime)
 void AEVRSpawnMaster::SetReferences()
 {
 	GameStateRef = Cast<AEVRGameStateBase>(GetWorld()->GetGameState());
-	PlayerVehicleRef = Cast<AEVRPlayerVehicle>(GetWorld()->GetFirstPlayerController()->GetPawn());
+	PlayerVehicleRef = Cast<AEVRVehiclePlayer>(GetWorld()->GetFirstPlayerController()->GetPawn());
 
 	if (PlayerVehicleRef)
 	{

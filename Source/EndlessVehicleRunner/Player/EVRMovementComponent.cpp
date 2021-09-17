@@ -2,8 +2,9 @@
 
 
 #include "EVRMovementComponent.h"
+#include "../Vehicles/EVRVehiclePlayer.h"
 
-#include "EVRPlayerVehicle.h"
+class AEVRVehiclePlayer;
 
 UEVRMovementComponent::UEVRMovementComponent()
 {
@@ -15,10 +16,11 @@ void UEVRMovementComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	PlayerCharacterRef = Cast<AEVRPlayerVehicle>(GetOwner());
+/**	PlayerCharacterRef = Cast<AEVRVehiclePlayer>(GetOwner());
 
 	if (!PlayerCharacterRef)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Failed to get Player Character Ref in Movement Component"));
 	}
+*/
 }

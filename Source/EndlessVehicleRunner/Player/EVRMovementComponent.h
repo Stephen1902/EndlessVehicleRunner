@@ -19,9 +19,9 @@ class ENDLESSVEHICLERUNNER_API UEVRMovementComponent : public UPawnMovementCompo
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
+/**
 private:
 	UPROPERTY()
-	class AEVRPlayerVehicle* PlayerCharacterRef;
-	
+	class AEVRVehiclePlayer* PlayerCharacterRef;
+*/
 };

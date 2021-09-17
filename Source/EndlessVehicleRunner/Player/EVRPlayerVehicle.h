@@ -59,6 +59,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Player Vehicle Options")
 	float StartingLife;
 
+	// Amount of life the player vehicle loses
 	UPROPERTY(EditDefaultsOnly, Category = "Player Vehicle Options")
 	float LifeLostPerSecond;
 
@@ -152,6 +153,7 @@ private:
 	UPROPERTY()
 	UTimelineComponent* TimelineComponent;
 
+	// To quickly flash the player speed, making it look like it's varying slightly
 	float TimeSinceSpeedoVaried;
 	
 	/** Curve to use when turning the vehicle round a corner */

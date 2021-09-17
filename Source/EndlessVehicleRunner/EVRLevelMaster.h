@@ -32,12 +32,6 @@ public:
 	UStaticMeshComponent* MeshCompBase;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Game Level")
-	UStaticMeshComponent* MeshCompLeft;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Game Level")
-	UStaticMeshComponent* MeshCompRight;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Game Level")
 	class UArrowComponent* ArrowComp;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Game Level")
@@ -45,7 +39,7 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Game Level")
 	class UBoxComponent* StartCollision;
-
+		
 	// A component for spawning an item the player can hit.  Change Yaw to 180 if not to be used.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Game Level")
 	class UEVRSpawnArrowComponent* SpawnPointLeft;
@@ -58,6 +52,12 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Game Level")
 	class UEVRSpawnArrowComponent* SpawnPointRight;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Game Level")
+	UChildActorComponent* OnRoadActor;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Game Level")
+	UChildActorComponent* NewRoadsideActor;
+
 	// Whether the floor type is straight, turns the player left or right
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Game Level")
 	EFloorType FloorType;
@@ -66,6 +66,20 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Game Level")
 	TArray<TSubclassOf<class AEVRSpawnMaster>> ItemsToSpawn;
 
+	// Non-Player vehicles to spawn in the level for the player to hit
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Game Level")
+	TArray<TSubclassOf<class AEVRVehicleMaster>> NonPlayerVehicles;
+	
+	// Roadside spawn items
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Game Level")
+	TArray<TSubclassOf<class AEVRRoadsideSpawns>> RoadsidePiecesToSpawn;
+
+	// Vehicles that have been turned by this level piece
+	UPROPERTY()
+	TArray<class AEVRVehicleMaster*> TurnedThisVehicle;  
+
+	void AddVehicleToTurnedVehicleArray(class AEVRVehicleMaster* VehicleIn);
+	
 	bool SpawnPickup();
 protected:
 	// Called when the game starts or when spawned
@@ -74,9 +88,6 @@ protected:
 	UFUNCTION()
 	void OnBeginOverlapEndComp(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
 
-	UFUNCTION()
-	void OnBeginOverlapStartComp(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
-	
 // Getters
 public:	
 	FTransform GetNextSpawnPoint() const { return ArrowComp->GetComponentTransform(); };
@@ -95,13 +106,13 @@ private:
 	class AEVRGameStateBase* GameStateRef;
 
 	UPROPERTY()
-	class AEVRPlayerVehicle* PlayerVehicleRef;
+	class AEVRVehiclePlayer* PlayerVehicleRef;
 
 	UPROPERTY()
 	TArray<FTransform> SpawnPointArray;
-
-	UPROPERTY()
-	UChildActorComponent* NewSpawnedActor;
+	
+	bool bLastPieceWasPark;
+	void SpawnRoadsidePiece();
 	
 	float TurnSpawnChance;
 	int32 BlockSpawnChance;

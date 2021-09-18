@@ -52,6 +52,9 @@ public:
 	float GetMaxSpeed() const { return MovementSpeed; }
 
 	UFUNCTION(BlueprintCallable, Category = "Vehicle Gameplay")
+	void SetMaxSpeed(const float SpeedIn) { MovementSpeed += SpeedIn; }
+
+	UFUNCTION(BlueprintCallable, Category = "Vehicle Gameplay")
 	float GetCurrentSpeedAsFloat() const { return CurrentSpeed; }
 	
 	UFUNCTION(BlueprintCallable, Category = "Vehicle Gameplay")

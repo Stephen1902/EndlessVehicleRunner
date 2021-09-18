@@ -15,6 +15,7 @@ AEVRVehicleAI::AEVRVehicleAI()
 	FrontOfVehicleCollision->SetupAttachment(StaticMeshComp);
 	FrontOfVehicleCollision->SetBoxExtent(FVector(64.f, 32.f, 32.f), false);
 	FrontOfVehicleCollision->SetHiddenInGame(false);
+	FrontOfVehicleCollision->OnComponentBeginOverlap.AddDynamic(this, &AEVRVehicleAI::OnFrontCollisionOverlap);
 	
 	StaticMeshComp->OnComponentBeginOverlap.AddDynamic(this, &AEVRVehicleAI::OnBeginOverlap);
 }
@@ -26,6 +27,18 @@ void AEVRVehicleAI::BeginPlay()
 	SetLifeSpan(20.f);
 	SetReferences();
 	SetLocationOfFrontCollision();
+
+	// Enter a variation in speed for the vehicle in increments of 25
+	const int32 RandomSpeedVariation = FMath::RandRange(1, 4) * 25;
+	if (FMath::RandRange(0, 1) == 0)
+	{
+		SetMaxSpeed(-RandomSpeedVariation);
+	}
+	else
+	{
+		SetMaxSpeed(RandomSpeedVariation);
+	}
+	
 }
 
 void AEVRVehicleAI::OnBeginOverlap(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -77,10 +90,42 @@ void AEVRVehicleAI::OnBeginOverlap(UPrimitiveComponent* HitComp, AActor* OtherAc
 
 void AEVRVehicleAI::OnFrontCollisionOverlap(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (AEVRVehicleAI* VehicleHit = Cast<AEVRVehicleAI>(OtherActor))
+	AEVRVehicleAI* VehicleHit = Cast<AEVRVehicleAI>(OtherActor);
+	
+	if (HornSound && VehicleHit && !bIsTurning)
 	{
+		// Only play the horn 1 in 3 times
+		if (FMath::RandRange(0, 2) == 0)
+		{
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), HornSound, GetActorLocation());
+		}
 		
+		switch(LocationIndex)
+		{
+			case 0:
+				TurnRight();
+				break;
+			case 1:
+			default:
+				if (FMath::RandRange(0, 1) == 0)
+				{
+					TurnLeft();
+				}
+				else
+				{
+					TurnRight();
+				}
+				break;
+			case 2:
+				TurnLeft();
+				break;
+		}
 	}
+
+/**	
+	{
+			
+	}*/
 }
 
 void AEVRVehicleAI::SetReferences()
@@ -88,16 +133,14 @@ void AEVRVehicleAI::SetReferences()
 	PlayerVehicleRef = Cast<AEVRVehiclePlayer>(GetWorld()->GetFirstPlayerController()->GetPawn());
 }
 
-void AEVRVehicleAI::SetLocationOfFrontCollision()
+void AEVRVehicleAI::SetLocationOfFrontCollision() const
 {
-	//	const UStaticMesh* CurrentMesh = StaticMeshComp->GetStaticMesh();
-	//	float NewX = CurrentMesh->GetBounds().GetBox().GetSize().X;
 	FVector LocalMin;
 	FVector LocalMax;
 	StaticMeshComp->GetLocalBounds(LocalMin, LocalMax);
 	
 	const float NewBoxLocation = (LocalMax.X + 68.f);
 	
-	FrontOfVehicleCollision->SetRelativeLocation(FVector(NewBoxLocation, 0.f, 50.f));
+	FrontOfVehicleCollision->SetRelativeLocation(FVector(NewBoxLocation, 0.f, 100.f));
 
 }

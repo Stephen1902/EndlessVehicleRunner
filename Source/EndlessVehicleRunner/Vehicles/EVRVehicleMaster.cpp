@@ -152,7 +152,6 @@ void AEVRVehicleMaster::Tick(float DeltaTime)
 void AEVRVehicleMaster::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
 }
 
 void AEVRVehicleMaster::MoveVehicleForward(float DeltaTime)

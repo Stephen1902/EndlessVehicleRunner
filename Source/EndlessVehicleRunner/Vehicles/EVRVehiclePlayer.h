@@ -32,7 +32,15 @@ public:
 	// Sound to play when the player turns a corner
 	UPROPERTY(Category = "Player Vehicle", EditDefaultsOnly, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
 	class USoundBase* TurnRoundCornerSound;
-	 
+
+	// Generic Engine sound to play
+	UPROPERTY(Category = "Player Vehicle", EditDefaultsOnly, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
+	class USoundBase* EngineSound;
+
+	// Engine revving / gear changing sound
+	UPROPERTY(Category = "Player Vehicle", EditDefaultsOnly, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
+	class USoundBase* EngineNoteSound;
+	
 	// Starting Life of the player vehicle
 	UPROPERTY(EditDefaultsOnly, Category = "Player Vehicle Options")
 	float StartingLife;
@@ -85,6 +93,8 @@ private:
 
 	bool bTurnSoundIsPlaying;
 	bool bCornerSoundIsPlaying;
+
+	void PlayRevvingSound() const;
 
 };
 

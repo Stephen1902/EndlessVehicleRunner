@@ -112,6 +112,11 @@ void AEVRVehiclePlayer::BeginPlay()
 	UMaterialInterface* CurrentMaterial = StaticMeshComp->GetMaterial(0);
 	DynMaterial = UMaterialInstanceDynamic::Create(CurrentMaterial, this);
 	StaticMeshComp->SetMaterial(0, DynMaterial);
+
+	if (EngineSound)
+	{
+		UGameplayStatics::PlaySound2D(GetWorld(), EngineSound);
+	}
 }
 
 void AEVRVehiclePlayer::Turn(const float DeltaTime)
@@ -142,6 +147,7 @@ void AEVRVehiclePlayer::Tick(float DeltaTime)
 	if (!bGameIsPaused)
 	{
 		ChangePlayerLife(DeltaTime * LifeLostPerSecond);
+		PlayRevvingSound();
 	}
 }
 
@@ -179,6 +185,7 @@ void AEVRVehiclePlayer::TimelineFloatReturn(float Value)
 		bCornerSoundIsPlaying = false;
 	}
 	
+	// Bring the camera in (as if braking) in the first half of the timeline then move it out again
 	if (Value <= 0.5f)
 	{
 		DynMaterial->SetScalarParameterValue("BrakeParam", 1.f);
@@ -189,4 +196,15 @@ void AEVRVehiclePlayer::TimelineFloatReturn(float Value)
 		DynMaterial->SetScalarParameterValue("BrakeParam", 0.f);
 		SpringArmComp->TargetArmLength = (FMath::Lerp(500.f, 1000.f, (Value -0.5f) * 2));
 	}	
+}
+
+void AEVRVehiclePlayer::PlayRevvingSound() const
+{
+	const float SpeedAsPercentage = 1.0f - ((GetMaxSpeed() - CurrentSpeed) / GetMaxSpeed());
+	const bool bShouldRev = FMath::IsNearlyEqual(SpeedAsPercentage, 0.15f, 0.f) || FMath::IsNearlyEqual(SpeedAsPercentage, 0.35f, 0.f) || FMath::IsNearlyEqual(SpeedAsPercentage, 0.60f, 0.f);
+	
+	if (EngineNoteSound && bShouldRev)
+	{
+		UGameplayStatics::PlaySound2D(GetWorld(), EngineNoteSound);
+	}
 }

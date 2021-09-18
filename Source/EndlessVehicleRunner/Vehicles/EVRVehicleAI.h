@@ -23,6 +23,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spawned Vehicle")
 	USoundBase* EndOfLifeSound;
 
+	// Sound to play when another vehicle intersects with the box collision
+	UPROPERTY(Category = "Spawned Vehicle", EditDefaultsOnly, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
+	USoundBase* HornSound;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spawned Vehicle")
 	class UBoxComponent* FrontOfVehicleCollision;
 
@@ -52,5 +56,5 @@ private:
 	class AEVRVehiclePlayer* PlayerVehicleRef;
 	
 	void SetReferences();
-	void SetLocationOfFrontCollision();
+	void SetLocationOfFrontCollision() const;
 };

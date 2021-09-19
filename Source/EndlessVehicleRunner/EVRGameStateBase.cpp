@@ -8,6 +8,8 @@ AEVRGameStateBase::AEVRGameStateBase()
 {
 	SpawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	CreateTurn = 0;
+
+	DistanceBetweenLanes = 200.f;
 }
 
 void AEVRGameStateBase::SpawnStartLevel()

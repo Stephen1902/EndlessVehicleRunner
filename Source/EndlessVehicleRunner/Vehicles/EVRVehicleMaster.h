@@ -25,10 +25,6 @@ public:
 	UPROPERTY(Category = "Game Vehicle", EditDefaultsOnly, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
 	class UEVRMovementComponent* MovementComponent;
 
-	// Distance between lanes
-	UPROPERTY(EditDefaultsOnly, Category = "Vehicle Options")
-	float DistanceBetweenLanes;
-	
 	// Units in cm the vehicle will move forward per second
 	UPROPERTY(EditDefaultsOnly, Category = "Vehicle Options")
 	float MovementSpeed;
@@ -66,10 +62,9 @@ public:
 	void SetDesiredRotation(const float NewRotation) { DesiredRotation = NewRotation; }
 
 	void SetNewPositionAfterTurn(const FVector ArrowLocation, const FRotator NewVehicleRotation);
-
-	float GetDistanceBetweenLanes() const { return DistanceBetweenLanes; }
+	
 	void AddToLaneLocations(const float LocationIn);
-
+	
 	UFUNCTION()
 	virtual void OnMeshBeginOverlap(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
 protected:
@@ -123,8 +118,16 @@ public:
 	UPROPERTY()
 	class UCurveFloat* FCurve;
 
+	UPROPERTY()
+	class AEVRGameStateBase* GameStateRef;
+
+	virtual void GetReferences();
+
 	void GetMovementCurve();
 	
 	// Time taken for curve to complete in seconds
 	float MaxCurveTimeRange;
+
+	// Distance between lanes for the vehicles to turn in to
+	float DistanceBetweenLanes;
 };

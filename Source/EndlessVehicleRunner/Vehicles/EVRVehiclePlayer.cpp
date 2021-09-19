@@ -24,7 +24,8 @@ AEVRVehiclePlayer::AEVRVehiclePlayer()
 	
 	StartingLife = 100.f;
 	LifeLostPerSecond = 1.0f;
-
+	DistanceTravelled = 0.f;
+	TimeSinceDistanceUpdated = 0.f;
 	TimeSinceSpeedoVaried = 0.f;
 
 	bTurnSoundIsPlaying = false;
@@ -148,6 +149,7 @@ void AEVRVehiclePlayer::Tick(float DeltaTime)
 	{
 		ChangePlayerLife(DeltaTime * LifeLostPerSecond);
 		PlayRevvingSound();
+		AddToDistanceTravelled(DeltaTime);
 	}
 }
 
@@ -207,4 +209,23 @@ void AEVRVehiclePlayer::PlayRevvingSound() const
 	{
 		UGameplayStatics::PlaySound2D(GetWorld(), EngineNoteSound);
 	}
+}
+
+void AEVRVehiclePlayer::AddToDistanceTravelled(float TimeIn)
+{
+	// Convert m/s speed to MPH (x10 since speed works out to around 6.7MPH)
+	const int32 SpeedAsMPH = (GetCurrentSpeedAsFloat() / 1000.f ) * 22.369363;
+
+	DistanceTravelled += SpeedAsMPH * TimeIn;
+
+	TimeSinceDistanceUpdated += TimeIn;
+
+	if (TimeSinceDistanceUpdated > 0.08f)
+	{
+		TimeSinceDistanceUpdated = 0.f;
+		
+		const FText TextToBroadcast =  FText::FromString(FString::SanitizeFloat(FMath::Floor(DistanceTravelled), 0));
+		OnDistanceUpdated.Broadcast(TextToBroadcast);
+	}
+	
 }

@@ -23,6 +23,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Level Pieces")
 	TArray<TSubclassOf<class AEVRLevelMaster>> TurnPiecesToSpawn;
 
+	// Distance between lanes for vehicles turning between them
+	UPROPERTY(EditDefaultsOnly, Category = "Vehicle Options")
+	float DistanceBetweenLanes;
+
 	void TryToSpawnNextPiece();
 
 	void SetCurrentPieceYaw(const float NewYaw);
@@ -30,6 +34,8 @@ public:
 	FRotator GetCurrentRotation() const { return SpawnRotation; }
 
 	void SetEVRLevelMasterRef(class AEVRLevelMaster* ReferenceIn) { LevelMasterRef = ReferenceIn; }
+
+	float GetDistanceBetweenLanes() const { return DistanceBetweenLanes; } 	
 
 protected:
 	// Called when the game starts or when spawned

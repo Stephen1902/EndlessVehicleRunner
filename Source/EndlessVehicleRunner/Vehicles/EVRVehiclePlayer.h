@@ -6,6 +6,7 @@
 #include "EVRVehicleMaster.h"
 #include "EVRVehiclePlayer.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDistanceUpdated, FText, DistanceUpdatedText);
 /**
  * 
  */
@@ -60,6 +61,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Player Vehicle Gameplay")
 	float GetCurrentLife() const { return 1.f - ((StartingLife - CurrentPlayerLife) / StartingLife); }
+
+	UPROPERTY(BlueprintAssignable, Category = "Player Vehicle Gameplay")
+	FOnDistanceUpdated OnDistanceUpdated;
 	
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -95,6 +99,9 @@ private:
 	bool bCornerSoundIsPlaying;
 
 	void PlayRevvingSound() const;
+	void AddToDistanceTravelled(float TimeIn);
 
+	float DistanceTravelled;
+	float TimeSinceDistanceUpdated;
 };
 

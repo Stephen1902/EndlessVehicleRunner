@@ -40,7 +40,6 @@ public:
 
 	// Helper function to ensure vehicle turns correctly when a corner is reached
 	void SetHasTurned(const bool TurnedIn) { bHasTurned = TurnedIn; }
-
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

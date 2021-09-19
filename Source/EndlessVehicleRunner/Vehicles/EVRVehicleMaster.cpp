@@ -2,9 +2,9 @@
 
 
 #include "EVRVehicleMaster.h"
-
 #include "../Player/EVRMovementComponent.h"
 #include "Components/BoxComponent.h"
+#include "EndlessVehicleRunner/EVRGameStateBase.h"
 #include "EndlessVehicleRunner/EVRLevelMaster.h"
 
 // Sets default values
@@ -35,7 +35,6 @@ AEVRVehicleMaster::AEVRVehicleMaster()
 	bCanTurn = false;
 	MovementSpeed = 500.f;
 	SpeedOfAcceleration = 5.0f;
-	DistanceBetweenLanes = 200.f;
 	TurnSpeed = 0.25f;
 	TurnDegrees = 100.f;
 	DesiredRotation = 180.f;
@@ -76,9 +75,9 @@ void AEVRVehicleMaster::BeginPlay()
 	Super::BeginPlay();
 
 	GetMovementCurve();
+	GetReferences();
 	
 	CurrentSpeed = 0.f;
-	
 }
 
 void AEVRVehicleMaster::TimelineFloatReturn(float Value)
@@ -222,6 +221,16 @@ void AEVRVehicleMaster::Turn(const float DeltaTime)
 	{
 		TimeSinceTurnStarted = 0.f;
 		bIsTurning = false;
+	}
+}
+
+void AEVRVehicleMaster::GetReferences()
+{
+	GameStateRef = Cast<AEVRGameStateBase>(GetWorld()->GetGameState());
+
+	if (GameStateRef)
+	{
+		DistanceBetweenLanes = GameStateRef->GetDistanceBetweenLanes();
 	}
 }
 

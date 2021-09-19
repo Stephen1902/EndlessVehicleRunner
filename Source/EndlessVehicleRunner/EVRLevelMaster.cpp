@@ -217,17 +217,17 @@ bool AEVRLevelMaster::SpawnPickup()
 		{
 			NewVehicle->SetHasTurned(true);
 
-			NewVehicle->AddToLaneLocations(NewVehicle->GetActorLocation().X - NewVehicle->GetDistanceBetweenLanes());
+			NewVehicle->AddToLaneLocations(NewVehicle->GetActorLocation().X - GameStateRef->GetDistanceBetweenLanes());
 			NewVehicle->AddToLaneLocations(NewVehicle->GetActorLocation().X);
-			NewVehicle->AddToLaneLocations(NewVehicle->GetActorLocation().X + NewVehicle->GetDistanceBetweenLanes());
+			NewVehicle->AddToLaneLocations(NewVehicle->GetActorLocation().X + GameStateRef->GetDistanceBetweenLanes());
 		}
 		else
 		{
 			NewVehicle->SetHasTurned(false);
 			
-			NewVehicle->AddToLaneLocations(NewVehicle->GetActorLocation().Y - NewVehicle->GetDistanceBetweenLanes());
+			NewVehicle->AddToLaneLocations(NewVehicle->GetActorLocation().Y - GameStateRef->GetDistanceBetweenLanes());
 			NewVehicle->AddToLaneLocations(NewVehicle->GetActorLocation().Y);
-			NewVehicle->AddToLaneLocations(NewVehicle->GetActorLocation().Y + NewVehicle->GetDistanceBetweenLanes());
+			NewVehicle->AddToLaneLocations(NewVehicle->GetActorLocation().Y + GameStateRef->GetDistanceBetweenLanes());
 			
 		}
 		//OnRoadActor->SetChildActorClass(NonPlayerVehicles[ItemToSpawn]);

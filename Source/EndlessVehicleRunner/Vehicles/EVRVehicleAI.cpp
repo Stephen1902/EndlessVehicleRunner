@@ -121,11 +121,6 @@ void AEVRVehicleAI::OnFrontCollisionOverlap(UPrimitiveComponent* HitComp, AActor
 				break;
 		}
 	}
-
-/**	
-	{
-			
-	}*/
 }
 
 void AEVRVehicleAI::SetReferences()
@@ -142,5 +137,4 @@ void AEVRVehicleAI::SetLocationOfFrontCollision() const
 	const float NewBoxLocation = (LocalMax.X + 68.f);
 	
 	FrontOfVehicleCollision->SetRelativeLocation(FVector(NewBoxLocation, 0.f, 100.f));
-
 }

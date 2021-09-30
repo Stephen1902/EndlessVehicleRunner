@@ -35,7 +35,10 @@ public:
 
 	void SetEVRLevelMasterRef(class AEVRLevelMaster* ReferenceIn) { LevelMasterRef = ReferenceIn; }
 
-	float GetDistanceBetweenLanes() const { return DistanceBetweenLanes; } 	
+	float GetDistanceBetweenLanes() const { return DistanceBetweenLanes; }
+
+	void SetLastRoadsidePieceWasFlat(const bool WasFlatIn ) { bRoadsideSpawnWasFlat = WasFlatIn; }
+	bool GetLastRoadsidePieceWasFlat() const { return bRoadsideSpawnWasFlat; }
 
 protected:
 	// Called when the game starts or when spawned
@@ -62,5 +65,7 @@ private:
 
 	UPROPERTY()
 	class AEVRLevelMaster* LevelMasterRef;
+
+	bool bRoadsideSpawnWasFlat;
 
 };

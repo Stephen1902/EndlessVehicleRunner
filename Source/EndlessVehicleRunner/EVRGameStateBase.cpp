@@ -57,11 +57,11 @@ void AEVRGameStateBase::TryToSpawnNextPiece()
 	CreateTurn += 1;
 	bool CreatedTurn = false;
 
-	// If more than 8 straight pieces have been spawned, chance of a turn occuring
-	if (CreateTurn > 8)
+	// If more than 12 straight pieces have been spawned, chance of a turn occuring
+	if (CreateTurn > 12)
 	{
-		// Always turn if 15 straights in a row
-		if (FMath::RandRange(0, 99) > 49 || CreateTurn > 15)
+		// Always turn if 18 straights in a row
+		if (FMath::RandRange(0, 99) > 49 || CreateTurn > 18)
 		{
 			CreateTurn = 0;
 			const int32 RandomSpawn = FMath::RandRange(0, TurnPiecesToSpawn.Num() - 1);

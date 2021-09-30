@@ -7,6 +7,9 @@
 #include "EVRVehiclePlayer.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDistanceUpdated, FText, DistanceUpdatedText);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPauseKeyPressed);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnGameOver, FText, DistanceThisGame, FText, PlayerHighScore, bool, NewHighScore);
+
 /**
  * 
  */
@@ -61,9 +64,15 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Player Vehicle Gameplay")
 	float GetCurrentLife() const { return 1.f - ((StartingLife - CurrentPlayerLife) / StartingLife); }
-
+	
 	UPROPERTY(BlueprintAssignable, Category = "Player Vehicle Gameplay")
 	FOnDistanceUpdated OnDistanceUpdated;
+
+	UPROPERTY(BlueprintAssignable, Category = "Player Vehicle Gameplay")
+	FOnPauseKeyPressed OnPauseKeyPressed;
+
+	UPROPERTY(BlueprintAssignable, Category = "Player Vehicle Gameplay")
+	FOnGameOver OnGameOver;
 	
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -103,5 +112,21 @@ private:
 
 	float DistanceTravelled;
 	float TimeSinceDistanceUpdated;
+	void PauseKeyPressed();
+
+	int32 HighScore;
+
+	UPROPERTY()
+	class USaveGame* SaveGameRef;
+	
+	UPROPERTY()
+	class UEVRSaveGame* ThisSaveGameRef;
+	
+	FString SaveGameSlot;
+	void SetSaveGameReferences();
+
+	void ShowMouseAndLockDisplay() const;
+
+	bool bGameOver;
 };
 

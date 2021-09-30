@@ -3,7 +3,6 @@
 #include "EVRLevelMaster.h"
 #include "EVRGameStateBase.h"
 #include "EVRSpawnArrowComponent.h"
-#include "EVRSpawnMaster.h"
 #include "Vehicles/EVRVehiclePlayer.h"
 #include "Vehicles/EVRVehicleMaster.h"
 #include "Components/ArrowComponent.h"
@@ -59,7 +58,6 @@ AEVRLevelMaster::AEVRLevelMaster()
 	
 	TurnSpawnChance = 0.f;
 	BlockSpawnChance = 50;
-	bLastPieceWasPark = false;
 }
 
 // Called when the game starts or when spawned
@@ -152,14 +150,14 @@ void AEVRLevelMaster::GetReferences()
 void AEVRLevelMaster::SpawnRoadsidePiece()
 {
 	// Check for valid roadside pieces available for spawn
-	if (RoadsidePiecesToSpawn.Num() > 0)
+	if (RoadsidePiecesToSpawn.Num() > 0 && GameStateRef)
 	{
 		int32 ItemToSpawn = FMath::RandRange(0, RoadsidePiecesToSpawn.Num() - 1);
 		
 		if (AEVRRoadsideSpawns* PieceToSpawn = Cast<AEVRRoadsideSpawns>(RoadsidePiecesToSpawn[ItemToSpawn].GetDefaultObject()))
 		{
 			// Check if last piece spawned was a park piece and if this one is, keep looping until it isn't
-			while (bLastPieceWasPark && PieceToSpawn->GetIsParkPiece())
+			while (GameStateRef->GetLastRoadsidePieceWasFlat() && PieceToSpawn->GetIsParkPiece())
 			{
 				ItemToSpawn = FMath::RandRange(0, RoadsidePiecesToSpawn.Num() - 1);
 				PieceToSpawn = Cast<AEVRRoadsideSpawns>(RoadsidePiecesToSpawn[ItemToSpawn].GetDefaultObject());
@@ -168,11 +166,11 @@ void AEVRLevelMaster::SpawnRoadsidePiece()
 			// Check if this new item is a park piece
 			if (PieceToSpawn->GetIsParkPiece())
 			{
-				bLastPieceWasPark = true;
+				GameStateRef->SetLastRoadsidePieceWasFlat(true);
 			}
 			else
 			{
-				bLastPieceWasPark = false;
+				GameStateRef->SetLastRoadsidePieceWasFlat(false);
 			}
 		
 			NewRoadsideActor->SetChildActorClass(RoadsidePiecesToSpawn[ItemToSpawn]);
@@ -230,7 +228,6 @@ bool AEVRLevelMaster::SpawnPickup()
 			NewVehicle->AddToLaneLocations(NewVehicle->GetActorLocation().Y + GameStateRef->GetDistanceBetweenLanes());
 			
 		}
-		//OnRoadActor->SetChildActorClass(NonPlayerVehicles[ItemToSpawn]);
 		
 		if (SpawnPointArray.Num() == 3)
 		{
@@ -247,9 +244,7 @@ bool AEVRLevelMaster::SpawnPickup()
 					break;
 			}
 		}
-
 		
-		//OnRoadActor->CreateChildActor();
 		return true;
 	}
 

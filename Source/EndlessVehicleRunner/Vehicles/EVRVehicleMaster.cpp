@@ -30,7 +30,6 @@ AEVRVehicleMaster::AEVRVehicleMaster()
 
 	InterpFunction.BindUFunction(this, FName("TimelineFloatReturn"));
 
-	bGameIsPaused = false;
 	bIsTurning = false;
 	bCanTurn = false;
 	MovementSpeed = 500.f;
@@ -136,15 +135,13 @@ void AEVRVehicleMaster::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (!bGameIsPaused)
-	{
-		MoveVehicleForward(DeltaTime);
+	MoveVehicleForward(DeltaTime);
 		
-		if (bIsTurning)
-		{
-			Turn(DeltaTime);
-		}
+	if (bIsTurning)
+	{
+		Turn(DeltaTime);
 	}
+
 }
 
 // Called to bind functionality to input

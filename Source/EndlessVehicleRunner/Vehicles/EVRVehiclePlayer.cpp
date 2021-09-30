@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Camera/CameraComponent.h"
 #include "EndlessVehicleRunner/EVRLevelMaster.h"
+#include "EndlessVehicleRunner/EVRSaveGame.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -27,9 +28,12 @@ AEVRVehiclePlayer::AEVRVehiclePlayer()
 	DistanceTravelled = 0.f;
 	TimeSinceDistanceUpdated = 0.f;
 	TimeSinceSpeedoVaried = 0.f;
+	HighScore = 0;
+	SaveGameSlot = "Slot0";
 
 	bTurnSoundIsPlaying = false;
 	bCornerSoundIsPlaying = false;
+	bGameOver = false;
 }
 
 FText AEVRVehiclePlayer::GetCurrentSpeed()
@@ -91,19 +95,66 @@ void AEVRVehiclePlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 	PlayerInputComponent->BindAction("TurnLeft", IE_Pressed, this, &AEVRVehicleMaster::TurnLeft);
 	PlayerInputComponent->BindAction("TurnRight", IE_Pressed, this, &AEVRVehicleMaster::TurnRight);
+	PlayerInputComponent->BindAction("PauseMenu", IE_Pressed, this, &AEVRVehiclePlayer::PauseKeyPressed);
 }
 
 void AEVRVehiclePlayer::ChangePlayerLife(const float LifeChangeValue)
 {
 	CurrentPlayerLife -= LifeChangeValue;
 	CurrentPlayerLife = FMath::Clamp(CurrentPlayerLife, -1.0f, StartingLife);
+
+	// Check if the player has run out of life
+	if (CurrentPlayerLife <= 0.f && !bGameOver)
+	{
+		const FText DistanceToBroadcast =  FText::FromString(FString::SanitizeFloat(FMath::Floor(DistanceTravelled), 0) + "M");
+		FText HighScoreToBroadcast =  FText::FromString(FString::FromInt(HighScore) + "M");
+		
+		// Check if player has set a new distance record
+		if (DistanceTravelled > HighScore)
+		{
+			HighScore = DistanceTravelled;
+			if (ThisSaveGameRef)
+			{
+				ThisSaveGameRef->SavedHighScore = HighScore;
+				
+				if (UGameplayStatics::SaveGameToSlot(ThisSaveGameRef, SaveGameSlot, 0))
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Game Saved"));
+				}
+				else
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Game failed to save"));
+				}
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("ThisSaveGameRef not valid"));
+			}
+
+			HighScoreToBroadcast =  FText::FromString(FString::FromInt(HighScore) + "M");
+			OnGameOver.Broadcast(DistanceToBroadcast, HighScoreToBroadcast, true);
+		}
+		else
+		{
+			OnGameOver.Broadcast(DistanceToBroadcast, HighScoreToBroadcast, false);
+		}
+
+		ShowMouseAndLockDisplay();
+		
+		// Pause the game
+		UGameplayStatics::SetGamePaused(GetWorld(), true);
+		bGameOver = true;
+	}
 }
 
 void AEVRVehiclePlayer::BeginPlay()
 {
 	Super::BeginPlay();
-
+	
 	AddPlayerWidgetToScreen();
+	SetSaveGameReferences();
+	ShowMouseAndLockDisplay();	
+	
 	CurrentPlayerLife = StartingLife;
 
 	YLocations.Add(GetActorLocation().Y - DistanceBetweenLanes);
@@ -118,6 +169,9 @@ void AEVRVehiclePlayer::BeginPlay()
 	{
 		UGameplayStatics::PlaySound2D(GetWorld(), EngineSound);
 	}
+
+	UGameplayStatics::SetGamePaused(GetWorld(), true);
+	bGameOver = false;
 }
 
 void AEVRVehiclePlayer::Turn(const float DeltaTime)
@@ -145,12 +199,9 @@ void AEVRVehiclePlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (!bGameIsPaused)
-	{
-		ChangePlayerLife(DeltaTime * LifeLostPerSecond);
-		PlayRevvingSound();
-		AddToDistanceTravelled(DeltaTime);
-	}
+	ChangePlayerLife(DeltaTime * LifeLostPerSecond);
+	PlayRevvingSound();
+	AddToDistanceTravelled(DeltaTime);
 }
 
 void AEVRVehiclePlayer::AddPlayerWidgetToScreen()
@@ -228,4 +279,47 @@ void AEVRVehiclePlayer::AddToDistanceTravelled(float TimeIn)
 		OnDistanceUpdated.Broadcast(TextToBroadcast);
 	}
 	
+}
+
+void AEVRVehiclePlayer::PauseKeyPressed()
+{
+	OnPauseKeyPressed.Broadcast();
+	ShowMouseAndLockDisplay();
+	UGameplayStatics::SetGamePaused(GetWorld(), true);
+}
+
+void AEVRVehiclePlayer::SetSaveGameReferences()
+{
+	// Check if a saved game already exists and if not, create it
+	if (UGameplayStatics::DoesSaveGameExist(SaveGameSlot, 0))
+	{
+		SaveGameRef = UGameplayStatics::LoadGameFromSlot(SaveGameSlot, 0);
+	}
+	else
+	{
+		SaveGameRef = Cast<UEVRSaveGame>(UGameplayStatics::CreateSaveGameObject(UEVRSaveGame::StaticClass()));
+	}
+
+	// Cast to the specific instance of the SaveGame class for the HighScore variable
+	ThisSaveGameRef = Cast<UEVRSaveGame>(SaveGameRef);
+	
+	if (ThisSaveGameRef)
+	{
+		HighScore = ThisSaveGameRef->SavedHighScore;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to get UEVRHighScore in EVRVehiclePlayer"));
+	}
+
+}
+
+void AEVRVehiclePlayer::ShowMouseAndLockDisplay() const
+{
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		PC->SetShowMouseCursor(true);
+		PC->SetInputMode(FInputModeUIOnly());
+	}
+
 }

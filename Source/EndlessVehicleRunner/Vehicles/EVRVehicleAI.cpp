@@ -24,7 +24,7 @@ void AEVRVehicleAI::BeginPlay()
 {
 	Super::BeginPlay();
 
-	SetLifeSpan(20.f);
+	SetLifeSpan(40.f);
 	SetReferences();
 	SetLocationOfFrontCollision();
 
@@ -76,7 +76,8 @@ void AEVRVehicleAI::OnBeginOverlap(UPrimitiveComponent* HitComp, AActor* OtherAc
 		
 		if (EndOfLifeParticle)
 		{
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), EndOfLifeParticle, GetActorLocation(), GetActorRotation());
+			const FVector LocationToSpawnParticle = StaticMeshComp->GetComponentLocation();
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), EndOfLifeParticle, LocationToSpawnParticle, GetActorRotation());
 		}
 
 		if (EndOfLifeSound)

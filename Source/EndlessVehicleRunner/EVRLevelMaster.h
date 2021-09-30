@@ -111,7 +111,6 @@ private:
 	UPROPERTY()
 	TArray<FTransform> SpawnPointArray;
 	
-	bool bLastPieceWasPark;
 	void SpawnRoadsidePiece();
 	
 	float TurnSpawnChance;
